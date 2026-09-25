@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1 text-light">Interactive Identity & Access Graph Explorer</h2>
+        <p class="text-muted mb-0">Topological relationship modeling across Users, Roles, Devices, and Sensitive Resources.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-info btn-sm" onclick="resetGraphView()">⟲ Reset Graph View</button>
+        <button class="btn btn-outline-secondary btn-sm" onclick="togglePhysics()">⚡ Toggle Physics</button>
+    </div>
+</div>
+
+<!-- Graph Filter Controls Bar (Section 14 Requirements) -->
+<div class="cyber-card p-3 mb-3">
+    <div class="row g-3 align-items-center">
+        <!-- Node Type Checkboxes -->
+        <div class="col-lg-6 col-md-12">
+            <span class="text-muted small fw-bold d-block mb-1">SHOW NODE TYPES:</span>
+            <div class="d-flex gap-3 flex-wrap">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input node-filter" type="checkbox" id="filterUser" value="User" checked onchange="applyFilters()">
+                    <label class="form-check-label text-info small fw-bold" for="filterUser">👤 Users</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input node-filter" type="checkbox" id="filterRole" value="Role" checked onchange="applyFilters()">
+                    <label class="form-check-label text-warning small fw-bold" for="filterRole">🏷️ Roles</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input node-filter" type="checkbox" id="filterResource" value="Resource" checked onchange="applyFilters()">
+                    <label class="form-check-label text-danger small fw-bold" for="filterResource">📄 Resources</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input node-filter" type="checkbox" id="filterDevice" value="Device" checked onchange="applyFilters()">
+                    <label class="form-check-label text-secondary small fw-bold" for="filterDevice">💻 Devices</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input node-filter" type="checkbox" id="filterDept" value="Department" checked onchange="applyFilters()">
+                    <label class="form-check-label text-success small fw-bold" for="filterDept">🏢 Depts</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Focus Selector -->
+        <div class="col-lg-4 col-md-8">
+            <span class="text-muted small fw-bold d-block mb-1">FOCUS ON IDENTITY:</span>
+            <select id="userSelector" class="form-select form-control-cyber form-select-sm" onchange="focusOnUser()">
+                <option value="">All Users (Global View)</option>
+                {% for u in users_list %}
+                <option value="USER:{{ u }}">{{ u }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-lg-2 col-md-4 text-lg-end">
+            <span class="text-muted small fw-bold d-block mb-1">NETWORK METRICS:</span>
+            <span class="badge bg-dark border border-secondary text-light">
+                <span id="nodeCountBadge">0</span> nodes | <span id="edgeCountBadge">0</span> edges
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Graph Container & Node Details Side Panel (Section 15 Requirements) -->
+<div class="row g-3">
+    <div class="col-lg-8 col-md-12">
+        <div class="cyber-card p-2 position-relative" style="height: 640px; background-color: #0b0f19;">
+            <div id="network-container" style="height: 100%; width: 100%;"></div>
+            <div class="position-absolute bottom-0 start-0 m-3 p-2 bg-dark rounded border border-secondary text-muted small shadow" style="opacity: 0.9;">
+                <div><span style="color: #38bdf8;">●</span> User | <span style="color: #a855f7;">●</span> Role | <span style="color: #ef4444;">●</span> Resource | <span style="color: #64748b;">●</span> Device</div>
+                <small>Click node for forensic metadata. Drag to pan, scroll to zoom.</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Node Details Panel -->
+    <div class="col-lg-4 col-md-12">
+        <div class="cyber-card p-4 h-100" id="nodeDetailsCard">
+            <h5 class="fw-bold text-light mb-3">Identity Node Inspector</h5>
+            <div id="nodePlaceholder" class="text-center py-5 text-muted">
+                <div class="fs-1 mb-2">🕸️</div>
+                <p>Click on any node in the graph to inspect structural topological properties and access paths.</p>
+            </div>
+            <div id="nodeContent" style="display: none;">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="badge" id="nodeTypeBadge">Type</span>
+                    <h4 class="text-light m-0" id="nodeTitle">Node ID</h4>
+                </div>
+                <ul class="list-group list-group-flush bg-transparent mb-3">
+                    <li class="list-group-item bg-transparent text-light border-secondary px-0 d-flex justify-content-between">
+                        <span class="text-muted">Entity Type:</span>
+                        <strong id="nodeTypeVal">-</strong>
+                    </li>
+                    <li class="list-group-item bg-transparent text-light border-secondary px-0 d-flex justify-content-between">
+                        <span class="text-muted">Direct Connections:</span>
+                        <strong id="nodeDegreeVal">-</strong>
+                    </li>
+                    <li class="list-group-item bg-transparent text-light border-secondary px-0 d-flex justify-content-between">
+                        <span class="text-muted">Sensitive Flag:</span>
+                        <span id="nodeSensitiveVal" class="badge bg-secondary">False</span>
+                    </li>
+                </ul>
+                <div id="userSpecificActions" class="mt-4" style="display: none;">
+                    <a id="inspectUserBtn" href="#" class="btn btn-primary w-100 mb-2">Inspect User Risk Profile →</a>
+                </div>
+                <div class="mt-4 pt-3 border-top border-secondary">
+                    <h6 class="text-light small fw-bold mb-2">Connected Relationships:</h6>
+                    <div id="connectedNodesList" class="small text-muted" style="max-height: 200px; overflow-y: auto;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const rawNodesData = {{ nodes|tojson }};
+    const rawEdgesData = {{ edges|tojson }};
+
+    const groupColors = {
+        'User': '#38bdf8',
+        'Role': '#a855f7',
+        'Department': '#10b981',
+        'Resource': '#ef4444',
+        'Device': '#64748b',
+        'Default': '#94a3b8'
+    };
+
+    let allNodes = new vis.DataSet(rawNodesData.map(n => ({
+        id: n.id,
+        label: n.label.length > 20 ? n.label.substring(0, 18) + '...' : n.label,
+        title: n.id,
+        group: n.group,
+        type: n.type,
+        color: {
+            background: groupColors[n.group] || '#94a3b8',
+            border: '#1e293b'
+        },
+        font: { color: '#ffffff', size: 12 },
+        size: n.group === 'User' ? 20 : (n.group === 'Resource' ? 16 : 14)
+    })));
+
+    let allEdges = new vis.DataSet(rawEdgesData.map(e => ({
+        from: e.from,
+        to: e.to,
+        label: e.label,
+        font: { color: '#64748b', size: 9 },
+        color: { color: '#334155', highlight: '#38bdf8' },
+        arrows: 'to'
+    })));
+
+    document.getElementById('nodeCountBadge').innerText = allNodes.length;
+    document.getElementById('edgeCountBadge').innerText = allEdges.length;
+
+    const container = document.getElementById('network-container');
+    const data = { nodes: allNodes, edges: allEdges };
+    
+    let physicsEnabled = true;
+    const options = {
+        nodes: { shape: 'dot', borderWidth: 2 },
+        physics: {
+            stabilization: { iterations: 100 },
+            barnesHut: { gravitationalConstant: -3000, springLength: 95 }
+        },
+        interaction: { hover: true, tooltipDelay: 200 }
+    };
+    
+    const network = new vis.Network(container, data, options);
+
+    // Node click handler
+    network.on("click", function(params) {
+        if (params.nodes.length > 0) {
+            const nodeId = params.nodes[0];
+            const node = allNodes.get(nodeId);
+            const connected = network.getConnectedNodes(nodeId);
+
+            document.getElementById('nodePlaceholder').style.display = 'none';
+            document.getElementById('nodeContent').style.display = 'block';
+
+            document.getElementById('nodeTitle').innerText = node.id;
+            document.getElementById('nodeTypeVal').innerText = node.group;
+            document.getElementById('nodeTypeBadge').innerText = node.group;
+            document.getElementById('nodeTypeBadge').style.backgroundColor = groupColors[node.group] || '#64748b';
+            document.getElementById('nodeDegreeVal').innerText = connected.length;
+
+            const isSens = node.id.includes('confidential') || node.id.includes('financial') || node.group === 'Resource';
+            const sensBadge = document.getElementById('nodeSensitiveVal');
+            sensBadge.innerText = isSens ? 'High Sensitive' : 'Standard';
+            sensBadge.className = isSens ? 'badge bg-danger' : 'badge bg-secondary';
+
+            // User profile link if user node
+            const userActions = document.getElementById('userSpecificActions');
+            if (node.group === 'User') {
+                const uid = node.id.replace('USER:', '');
+                userActions.style.display = 'block';
+                document.getElementById('inspectUserBtn').href = `/user/${uid}`;
+            } else {
+                userActions.style.display = 'none';
+            }
+
+            // List connected nodes
+            const listEl = document.getElementById('connectedNodesList');
+            listEl.innerHTML = '';
+            connected.slice(0, 15).forEach(cId => {
+                const cNode = allNodes.get(cId);
+                const item = document.createElement('div');
+                item.className = 'py-1 border-bottom border-secondary d-flex justify-content-between';
+                item.innerHTML = `<span>${cId}</span><span class="badge bg-dark text-muted">${cNode ? cNode.group : ''}</span>`;
+                listEl.appendChild(item);
+            });
+        }
+    });
+
+    function applyFilters() {
+        const checkedTypes = Array.from(document.querySelectorAll('.node-filter:checked')).map(cb => cb.value);
+        const filteredNodes = rawNodesData.filter(n => checkedTypes.includes(n.group));
+        const filteredNodeIds = new Set(filteredNodes.map(n => n.id));
+        const filteredEdges = rawEdgesData.filter(e => filteredNodeIds.has(e.from) && filteredNodeIds.has(e.to));
+
+        allNodes.clear();
+        allEdges.clear();
+        allNodes.add(filteredNodes.map(n => ({
+            id: n.id,
+            label: n.label.length > 20 ? n.label.substring(0, 18) + '...' : n.label,
+            title: n.id,
+            group: n.group,
+            type: n.type,
+            color: { background: groupColors[n.group] || '#94a3b8', border: '#1e293b' },
+            font: { color: '#ffffff', size: 12 },
+            size: n.group === 'User' ? 20 : 14
+        })));
+        allEdges.add(filteredEdges.map(e => ({
+            from: e.from,
+            to: e.to,
+            label: e.label,
+            font: { color: '#64748b', size: 9 },
+            color: { color: '#334155' },
+            arrows: 'to'
+        })));
+
+        document.getElementById('nodeCountBadge').innerText = allNodes.length;
+        document.getElementById('edgeCountBadge').innerText = allEdges.length;
+    }
+
+    function focusOnUser() {
+        const select = document.getElementById('userSelector');
+        const uid = select.value;
+        if (!uid) {
+            resetGraphView();
+            return;
+        }
+        if (allNodes.get(uid)) {
+            network.focus(uid, {
+                scale: 1.2,
+                animation: { duration: 1000, easingFunction: 'easeInOutQuad' }
+            });
+            network.selectNodes([uid]);
+        }
+    }
+
+    function resetGraphView() {
+        document.getElementById('userSelector').value = "";
+        network.fit({ animation: { duration: 800 } });
+    }
+
+    function togglePhysics() {
+        physicsEnabled = !physicsEnabled;
+        network.setOptions({ physics: { enabled: physicsEnabled } });
+    }
+</script>
+{% endblock %}

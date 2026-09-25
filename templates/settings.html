@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1 text-light">System & Analytics Configuration</h2>
+        <p class="text-muted mb-0">Calibrate hybrid scoring weights, risk classification thresholds, and inspect deployment architecture.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Analysis Settings: Risk Weights & Thresholds (Section 36) -->
+    <div class="col-lg-7 col-md-12">
+        <div class="cyber-card p-4 h-100">
+            <h5 class="fw-bold text-info mb-3">⚖️ Hybrid Scoring Weights & Risk Thresholds</h5>
+            <p class="text-muted small">
+                Configure the relative contribution of each analytical engine to the final composite risk score:
+                <br><code>Risk Score = (w_graph * G) + (w_behavior * B) + (w_rule * R)</code>.
+                <br><strong class="text-warning">Constraint: The sum of weights must strictly equal 1.0 (100%).</strong>
+            </p>
+
+            <form method="POST" action="{{ url_for('main.settings') }}" id="settingsForm" onsubmit="return validateWeights()">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label class="form-label text-light small fw-bold">Graph Weight (w1)</label>
+                        <input type="number" step="0.05" min="0" max="1" name="w_graph" id="w_graph" class="form-control form-control-cyber" value="{{ settings.w_graph }}" onchange="updateWeightSum()">
+                        <small class="text-muted">Default: 0.35 (35%)</small>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-light small fw-bold">Behavior ML Weight (w2)</label>
+                        <input type="number" step="0.05" min="0" max="1" name="w_behavior" id="w_behavior" class="form-control form-control-cyber" value="{{ settings.w_behavior }}" onchange="updateWeightSum()">
+                        <small class="text-muted">Default: 0.35 (35%)</small>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-light small fw-bold">Rule Weight (w3)</label>
+                        <input type="number" step="0.05" min="0" max="1" name="w_rule" id="w_rule" class="form-control form-control-cyber" value="{{ settings.w_rule }}" onchange="updateWeightSum()">
+                        <small class="text-muted">Default: 0.30 (30%)</small>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-dark rounded border border-secondary mb-4 d-flex justify-content-between align-items-center">
+                    <span class="text-light small">Current Sum of Weights:</span>
+                    <span id="weightSumBadge" class="badge bg-success fs-6">1.00 / 1.00</span>
+                </div>
+
+                <h6 class="text-light fw-bold mb-3">Risk Classification Thresholds (0–100 Scale)</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label class="form-label text-success small fw-bold">LOW Risk Max</label>
+                        <input type="number" step="0.5" name="thresh_low" class="form-control form-control-cyber" value="{{ settings.thresh_low }}">
+                        <small class="text-muted">Default: 34.9</small>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-warning small fw-bold">MEDIUM Risk Max</label>
+                        <input type="number" step="0.5" name="thresh_medium" class="form-control form-control-cyber" value="{{ settings.thresh_medium }}">
+                        <small class="text-muted">Default: 64.9</small>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-danger small fw-bold">HIGH Risk Cutoff</label>
+                        <input type="number" step="0.5" name="thresh_high" class="form-control form-control-cyber" value="{{ settings.thresh_high }}">
+                        <small class="text-muted">Default: 65.0</small>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2">
+                    💾 Save Analytics Settings & Recalculate Risks
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- System Information Panel (Section 37) -->
+    <div class="col-lg-5 col-md-12">
+        <div class="cyber-card p-4 h-100">
+            <h5 class="fw-bold text-light mb-3">🖥️ System & Architectural Information</h5>
+            <p class="text-muted small">
+                Deployed runtime environment, underlying analytical engines, and database persistence specifications.
+            </p>
+
+            <ul class="list-group list-group-flush bg-transparent">
+                {% for k, v in sys_info.items() %}
+                <li class="list-group-item bg-transparent text-light border-secondary px-0 py-2">
+                    <span class="text-muted small text-uppercase d-block">{{ k.replace('_', ' ') }}:</span>
+                    <strong class="text-info">{{ v }}</strong>
+                </li>
+                {% endfor %}
+            </ul>
+
+            <div class="alert alert-dark border-secondary mt-4 mb-0 small text-muted">
+                <strong class="text-light">Security & Integrity:</strong> Production mode enforces Werkzeug PBKDF2 password cryptography, session validation, and parameterized SQLAlchemy ORM transactions.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateWeightSum() {
+        const w1 = parseFloat(document.getElementById('w_graph').value) || 0;
+        const w2 = parseFloat(document.getElementById('w_behavior').value) || 0;
+        const w3 = parseFloat(document.getElementById('w_rule').value) || 0;
+        const sum = Math.round((w1 + w2 + w3) * 100) / 100;
+        
+        const badge = document.getElementById('weightSumBadge');
+        badge.innerText = sum.toFixed(2) + " / 1.00";
+        if (sum === 1.0) {
+            badge.className = 'badge bg-success fs-6';
+        } else {
+            badge.className = 'badge bg-danger fs-6';
+        }
+    }
+
+    function validateWeights() {
+        const w1 = parseFloat(document.getElementById('w_graph').value) || 0;
+        const w2 = parseFloat(document.getElementById('w_behavior').value) || 0;
+        const w3 = parseFloat(document.getElementById('w_rule').value) || 0;
+        const sum = Math.round((w1 + w2 + w3) * 100) / 100;
+
+        if (sum !== 1.0) {
+            alert(`Total weights must sum exactly to 1.0. Current sum is ${sum}. Please adjust your values.`);
+            return false;
+        }
+        return true;
+    }
+</script>
+{% endblock %}

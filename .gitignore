@@ -1,0 +1,14 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+instance/secgraph.db
+app/models_store/*.joblib
+reports/*.pdf
+data/raw/*.csv
+data/processed/*.csv
+.env
+.vscode/

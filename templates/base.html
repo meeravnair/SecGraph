@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecGraph - Enterprise Identity & Access Risk Analytics</title>
+    <!-- Fonts & Bootstrap -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <!-- Chart.js & Vis.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+</head>
+<body>
+
+{% if request.endpoint == 'main.login' %}
+    {% block login_body %}{% endblock %}
+{% else %}
+    <div class="app-wrapper">
+        <!-- Master Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span>🛡️ SecGraph</span>
+            </div>
+            
+            <div class="sidebar-menu">
+                <div class="sidebar-section-header">SECGRAPH</div>
+                <a href="{{ url_for('main.dashboard') }}" class="sidebar-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
+                    <span>📊</span> Dashboard
+                </a>
+                <a href="{{ url_for('main.users') }}" class="sidebar-link {% if request.endpoint == 'main.users' or request.endpoint == 'main.user_profile' %}active{% endif %}">
+                    <span>👥</span> Users
+                </a>
+                <a href="{{ url_for('main.graph_view') }}" class="sidebar-link {% if request.endpoint == 'main.graph_view' %}active{% endif %}">
+                    <span>🕸️</span> Identity Graph
+                </a>
+                <a href="{{ url_for('main.alerts') }}" class="sidebar-link {% if request.endpoint == 'main.alerts' %}active{% endif %}">
+                    <span>🚨</span> Alerts
+                </a>
+                <a href="{{ url_for('main.reports') }}" class="sidebar-link {% if request.endpoint == 'main.reports' %}active{% endif %}">
+                    <span>📑</span> Reports
+                </a>
+
+                <div class="sidebar-section-header mt-3">DATA</div>
+                <a href="{{ url_for('main.dataset') }}" class="sidebar-link {% if request.endpoint == 'main.dataset' %}active{% endif %}">
+                    <span>📂</span> Dataset
+                </a>
+                <a href="{{ url_for('main.analysis_page') }}" class="sidebar-link {% if request.endpoint == 'main.analysis_page' %}active{% endif %}">
+                    <span>⚡</span> Analysis / Processing
+                </a>
+
+                <div class="sidebar-section-header mt-3">RESEARCH</div>
+                <a href="{{ url_for('main.evaluation') }}" class="sidebar-link {% if request.endpoint == 'main.evaluation' %}active{% endif %}">
+                    <span>🧪</span> Model Evaluation
+                </a>
+                <a href="{{ url_for('main.history') }}" class="sidebar-link {% if request.endpoint == 'main.history' %}active{% endif %}">
+                    <span>📜</span> Analysis History
+                </a>
+
+                <div class="sidebar-section-header mt-3">SYSTEM</div>
+                <a href="{{ url_for('main.settings') }}" class="sidebar-link {% if request.endpoint == 'main.settings' %}active{% endif %}">
+                    <span>⚙️</span> Settings
+                </a>
+                <a href="{{ url_for('main.logout') }}" class="sidebar-link text-danger">
+                    <span>🚪</span> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Header Bar -->
+            <header class="top-header">
+                <div class="header-title">
+                    <h3>SECGRAPH OPERATIONS CONSOLE</h3>
+                    <p>Explainable Hybrid Graph & Behavioral Identity Risk Assessment</p>
+                </div>
+                <div class="header-meta">
+                    <div class="status-indicator">
+                        <span class="status-dot"></span>
+                        Security Engine Active
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle text-light" type="button" data-bs-toggle="dropdown">
+                            👤 {{ current_user.username if current_user.is_authenticated else 'Analyst' }} (SOC)
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ url_for('main.settings') }}">⚙️ Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('main.logout') }}">🚪 Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Flash Notifications -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show bg-dark text-light border-secondary shadow mb-4" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+{% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

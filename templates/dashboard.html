@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+{% block content %}
+<!-- Top 6 KPI Cards Row (Section 5.1 Requirements) -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="cyber-card kpi-card">
+            <div class="kpi-title">TOTAL USERS</div>
+            <div class="kpi-value text-info">{{ total_users }}</div>
+            <div class="kpi-subtext">Monitored identities</div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="cyber-card kpi-card low">
+            <div class="kpi-title">LOW RISK</div>
+            <div class="kpi-value text-success">{{ low_cnt }}</div>
+            <div class="kpi-subtext">{{ low_pct }}% of population</div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="cyber-card kpi-card med">
+            <div class="kpi-title">MEDIUM RISK</div>
+            <div class="kpi-value text-warning">{{ med_cnt }}</div>
+            <div class="kpi-subtext">Requires peer audit</div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="cyber-card kpi-card high">
+            <div class="kpi-title">HIGH RISK</div>
+            <div class="kpi-value text-danger">{{ high_cnt }}</div>
+            <div class="kpi-subtext">Action required</div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="cyber-card kpi-card">
+            <div class="kpi-title">ANOMALIES</div>
+            <div class="kpi-value text-warning">{{ anomaly_cnt }}</div>
+            <div class="kpi-subtext">Isolation Forest outliers</div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="cyber-card kpi-card high">
+            <div class="kpi-title">OPEN ALERTS</div>
+            <div class="kpi-value text-danger">{{ open_alerts }}</div>
+            <div class="kpi-subtext">Active SOC findings</div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 6: Risk Distribution & Section 7: Risk Trend -->
+<div class="row g-3 mb-4">
+    <!-- Risk Distribution Donut Chart -->
+    <div class="col-lg-4 col-md-12">
+        <div class="cyber-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-light m-0">Risk Distribution</h5>
+                <span class="badge bg-dark border border-secondary text-info">Population %</span>
+            </div>
+            <div style="height: 220px; position: relative;">
+                <canvas id="riskDonutChart"></canvas>
+            </div>
+            <div class="mt-3 pt-3 border-top border-secondary d-flex justify-content-around text-center">
+                <div>
+                    <span class="text-success fw-bold fs-6">● Low</span>
+                    <div class="text-muted small">{{ low_cnt }} users</div>
+                </div>
+                <div>
+                    <span class="text-warning fw-bold fs-6">● Medium</span>
+                    <div class="text-muted small">{{ med_cnt }} users</div>
+                </div>
+                <div>
+                    <span class="text-danger fw-bold fs-6">● High</span>
+                    <div class="text-muted small">{{ high_cnt }} users</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk Trend Line Chart -->
+    <div class="col-lg-8 col-md-12">
+        <div class="cyber-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-light m-0">Risk Trend & Anomalies</h5>
+                <span class="badge bg-dark border border-secondary text-muted">Weekly Temporal Baseline</span>
+            </div>
+            <div style="height: 240px; position: relative;">
+                <canvas id="riskTrendChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 8: High-Risk Users Table -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="cyber-card">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <div>
+                    <h5 class="fw-bold text-light m-0">🚨 Prioritized High-Risk Identity Registry</h5>
+                    <p class="text-muted small mb-0">Identities scored with elevated risk from graph centrality, ML anomaly, and policy heuristics.</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('main.export_risks_csv') }}" class="btn btn-outline-secondary btn-sm">📥 Export CSV</a>
+                    <a href="{{ url_for('main.users', risk='HIGH') }}" class="btn btn-outline-danger btn-sm">Filter High Risk Only</a>
+                    <a href="{{ url_for('main.users') }}" class="btn btn-outline-info btn-sm">View All Users →</a>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="cyber-table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Graph Score</th>
+                            <th>Behavior Score</th>
+                            <th>Rule Score</th>
+                            <th>Final Risk Score</th>
+                            <th>Risk Level</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in top_risks %}
+                        <tr>
+                            <td>
+                                <strong class="text-info fs-6">{{ item.user_id }}</strong>
+                            </td>
+                            <td>
+                                <span class="badge bg-dark border border-info text-info">{{ item.graph_score }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-dark border border-warning text-warning">{{ item.behavior_score }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-dark border border-danger text-danger">{{ item.rule_score }}</span>
+                            </td>
+                            <td>
+                                <strong class="text-danger fs-5">{{ item.risk_score }}</strong>
+                                <small class="text-muted">/100</small>
+                            </td>
+                            <td>
+                                {% if item.risk_level == 'HIGH' %}
+                                    <span class="badge badge-high">HIGH</span>
+                                {% elif item.risk_level == 'MEDIUM' %}
+                                    <span class="badge badge-med">MEDIUM</span>
+                                {% else %}
+                                    <span class="badge badge-low">LOW</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('main.user_profile', user_id=item.user_id) }}" class="btn btn-primary btn-sm px-3">
+                                    🔍 Investigate
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">No risk evaluations recorded. Run the analytical pipeline.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Alerts Queue -->
+<div class="row g-3">
+    <div class="col-12">
+        <div class="cyber-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-light m-0">Active Security Incidents & Alerts</h5>
+                <a href="{{ url_for('main.alerts') }}" class="btn btn-outline-warning btn-sm">View Alerts Queue ({{ open_alerts }}) →</a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="cyber-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Alert ID</th>
+                            <th>Timestamp</th>
+                            <th>User ID</th>
+                            <th>Severity</th>
+                            <th>Alert Type</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in recent_alerts %}
+                        <tr>
+                            <td><code>#{{ a.id }}</code></td>
+                            <td><small class="text-muted">{{ a.created_at.strftime('%Y-%m-%d %H:%M') }}</small></td>
+                            <td><strong class="text-info">{{ a.user_id }}</strong></td>
+                            <td>
+                                <span class="badge bg-{% if a.severity == 'CRITICAL' %}danger{% elif a.severity == 'HIGH' %}danger{% else %}warning text-white{% endif %}">
+                                    {{ a.severity }}
+                                </span>
+                            </td>
+                            <td>{{ a.alert_type }}</td>
+                            <td>
+                                <span class="badge bg-{% if a.status == 'Open' %}danger{% elif a.status == 'Under Review' %}warning text-white{% else %}success{% endif %}">
+                                    {{ a.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('main.user_profile', user_id=a.user_id) }}" class="btn btn-outline-info btn-sm">Inspect User</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-3">No active security alerts logged.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Donut Chart: Risk Distribution
+    const ctxDonut = document.getElementById('riskDonutChart').getContext('2d');
+    new Chart(ctxDonut, {
+        type: 'doughnut',
+        data: {
+            labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+            datasets: [{
+                data: [{{ low_cnt }}, {{ med_cnt }}, {{ high_cnt }}],
+                backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                borderWidth: 2,
+                borderColor: '#11192e',
+                hoverOffset: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            cutout: '70%'
+        }
+    });
+
+    // Trend Chart: Risk Score & Anomalies
+    const ctxTrend = document.getElementById('riskTrendChart').getContext('2d');
+    new Chart(ctxTrend, {
+        type: 'line',
+        data: {
+            labels: {{ trend_labels|tojson }},
+            datasets: [
+                {
+                    label: 'Mean Risk Score',
+                    data: {{ trend_scores|tojson }},
+                    borderColor: '#38bdf8',
+                    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.35,
+                    pointBackgroundColor: '#38bdf8',
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Behavioral Anomalies',
+                    data: {{ trend_anomalies|tojson }},
+                    borderColor: '#f59e0b',
+                    borderDash: [5, 5],
+                    borderWidth: 2,
+                    pointBackgroundColor: '#f59e0b',
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#94a3b8' }
+                },
+                y: {
+                    position: 'left',
+                    min: 0,
+                    max: 100,
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#38bdf8' }
+                },
+                y1: {
+                    position: 'right',
+                    grid: { display: false },
+                    ticks: { color: '#f59e0b' }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: { color: '#f8fafc' }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

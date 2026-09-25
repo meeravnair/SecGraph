@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1 text-light">Dataset Management & Telemetry Ingestion</h2>
+        <p class="text-muted mb-0">Manage, preview, and inspect raw enterprise activity telemetry logs (CERT r4.2 benchmark & custom logs).</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('main.analysis_page') }}" class="btn btn-warning btn-sm">
+            ⚡ Go to Analysis Pipeline →
+        </a>
+    </div>
+</div>
+
+<!-- Section 17: Dataset Status Overview Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-sm-6">
+        <div class="cyber-card kpi-card">
+            <div class="kpi-title">DATASET STATUS</div>
+            <div class="kpi-value text-success">✓ Ready</div>
+            <div class="kpi-subtext">CERT r4.2 Benchmark</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="cyber-card kpi-card">
+            <div class="kpi-title">TOTAL RECORDS</div>
+            <div class="kpi-value text-info">{{ overview.total_records|default(0)|format_number if overview.total_records is defined else overview.total_records }}</div>
+            <div class="kpi-subtext">Across {{ overview.total_files }} CSV files</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="cyber-card kpi-card">
+            <div class="kpi-title">INDEXED FILES</div>
+            <div class="kpi-value text-warning">{{ overview.total_files }}</div>
+            <div class="kpi-subtext">logon, file, device, http, insiders</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="cyber-card kpi-card">
+            <div class="kpi-title">LAST ANALYSIS</div>
+            <div class="kpi-value text-light fs-5">{{ last_run.timestamp.strftime('%Y-%m-%d %H:%M') if last_run else 'Pending' }}</div>
+            <div class="kpi-subtext">Pipeline execution status: {{ last_run.status if last_run else 'Idle' }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <!-- File Upload Section -->
+    <div class="col-lg-5 col-md-12">
+        <div class="cyber-card p-4 h-100">
+            <h5 class="fw-bold text-danger mb-3">📥 Upload Telemetry CSV Logs</h5>
+            <p class="text-muted small">
+                Upload raw enterprise activity logs. Supported telemetry files: <code>logon.csv</code>, <code>file.csv</code>, <code>device.csv</code>, <code>http.csv</code>, <code>email.csv</code>, <code>insiders.csv</code>.
+            </p>
+            
+            <form action="{{ url_for('main.upload_dataset') }}" method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label class="form-label text-light small fw-bold">Select CSV File(s)</label>
+                    <input type="file" name="dataset_files" class="form-control form-control-cyber" multiple accept=".csv" required>
+                    <small class="text-muted">Maximum file size: 100 MB per batch.</small>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mt-2">
+                    Upload & Ingest to <code>data/raw/</code>
+                </button>
+            </form>
+
+            <div class="mt-4 pt-3 border-top border-secondary">
+                <h6 class="text-light small fw-bold mb-2">Available Raw Files in Storage:</h6>
+                <div class="list-group list-group-flush bg-transparent">
+                    {% for f in overview.files %}
+                    <a href="{{ url_for('main.dataset', file=f.name) }}" class="list-group-item bg-transparent text-light border-secondary px-0 py-2 d-flex justify-content-between align-items-center {% if selected_file == f.name or (not selected_file and loop.first) %}text-info fw-bold{% endif %}">
+                        <div>
+                            <span>📄 {{ f.name }}</span>
+                            <small class="text-muted d-block">{{ f.rows }} records ({{ f.size_kb }} KB)</small>
+                        </div>
+                        <span class="btn btn-outline-secondary btn-sm">Preview →</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 18: Dataset Preview Section -->
+    <div class="col-lg-7 col-md-12">
+        <div class="cyber-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <div>
+                    <h5 class="fw-bold text-info m-0">📊 Dataset Telemetry Preview</h5>
+                    <span class="text-muted small">File: <code>{{ preview_data.filename if preview_data else 'None' }}</code></span>
+                </div>
+                {% if preview_data %}
+                <span class="badge bg-dark border border-secondary text-light">
+                    {{ preview_data.total_rows }} rows | {{ preview_data.columns|length }} columns
+                </span>
+                {% endif %}
+            </div>
+
+            {% if preview_data %}
+            <!-- Dataset Metadata Summary -->
+            <div class="row g-2 mb-3">
+                <div class="col-sm-4">
+                    <div class="p-2 bg-dark rounded border border-secondary small">
+                        <span class="text-muted">Unique Users (sample):</span>
+                        <strong class="text-light d-block">{{ preview_data.unique_users }}</strong>
+                    </div>
+                </div>
+                <div class="col-sm-8">
+                    <div class="p-2 bg-dark rounded border border-secondary small">
+                        <span class="text-muted">Timestamp Window (sample):</span>
+                        <code class="text-info d-block">{{ preview_data.timestamp_range }}</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview Table -->
+            <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+                <table class="cyber-table table-hover align-middle small mb-0">
+                    <thead>
+                        <tr>
+                            {% for col in preview_data.columns %}
+                            <th>
+                                <div>{{ col }}</div>
+                                <small class="text-muted fw-normal">({{ preview_data.dtypes.get(col, 'obj') }})</small>
+                            </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in preview_data.rows %}
+                        <tr>
+                            {% for col in preview_data.columns %}
+                            <td>{{ row.get(col, '') }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-warning bg-dark text-warning border-warning my-5 text-center">
+                Select a CSV file from the left panel to inspect its columns and preview sample telemetry records.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

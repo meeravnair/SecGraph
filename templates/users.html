@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1 text-light">Enterprise Monitored Identities</h2>
+        <p class="text-muted mb-0">Total of <strong>{{ total_count }}</strong> identities indexed with multi-signal risk evaluations.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('main.export_users_csv') }}" class="btn btn-outline-secondary btn-sm">
+            👥 Export Users CSV
+        </a>
+        <a href="{{ url_for('main.export_risks_csv') }}" class="btn btn-outline-info btn-sm">
+            📊 Export Risk Results CSV
+        </a>
+    </div>
+</div>
+
+<!-- Search and Filter Form (Section 50 Requirements) -->
+<div class="cyber-card mb-4 p-3">
+    <form method="GET" action="{{ url_for('main.users') }}" class="row g-2 align-items-center">
+        <div class="col-md-4 col-sm-12">
+            <div class="input-group">
+                <span class="input-group-text bg-dark text-muted border-secondary">🔍</span>
+                <input type="text" name="q" value="{{ search_query }}" class="form-control form-control-cyber" placeholder="Search User ID or Name...">
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <select name="risk" class="form-select form-control-cyber">
+                <option value="">All Risk Levels</option>
+                <option value="HIGH" {% if risk_filter == 'HIGH' %}selected{% endif %}>High Risk (>= 65.0)</option>
+                <option value="MEDIUM" {% if risk_filter == 'MEDIUM' %}selected{% endif %}>Medium Risk (35.0 - 64.9)</option>
+                <option value="LOW" {% if risk_filter == 'LOW' %}selected{% endif %}>Low Risk (&lt; 35.0)</option>
+            </select>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <select name="dept" class="form-select form-control-cyber">
+                <option value="">All Departments</option>
+                {% for d in departments %}
+                <option value="{{ d }}" {% if dept_filter == d %}selected{% endif %}>{{ d }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 col-sm-12 d-flex gap-2">
+            <button type="submit" class="btn btn-primary w-100">Filter</button>
+            <a href="{{ url_for('main.users') }}" class="btn btn-outline-secondary">Reset</a>
+        </div>
+    </form>
+</div>
+
+<!-- Users Table -->
+<div class="cyber-card p-0">
+    <div class="table-responsive">
+        <table class="cyber-table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Role</th>
+                    <th>Graph</th>
+                    <th>Behavior</th>
+                    <th>Rules</th>
+                    <th>Final Risk</th>
+                    <th>Level</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                {% set r = results_map.get(u.user_id) %}
+                <tr>
+                    <td>
+                        <strong class="text-info fs-6">{{ u.user_id }}</strong>
+                    </td>
+                    <td><span class="text-light">{{ u.name or 'N/A' }}</span></td>
+                    <td><span class="badge bg-dark border border-secondary text-muted">{{ u.department or 'N/A' }}</span></td>
+                    <td><small class="text-muted">{{ u.role or 'Staff' }}</small></td>
+                    <td>
+                        <span class="text-info">{{ r.graph_score if r else '-' }}</span>
+                    </td>
+                    <td>
+                        <span class="text-warning">{{ r.behavior_score if r else '-' }}</span>
+                    </td>
+                    <td>
+                        <span class="text-danger">{{ r.rule_score if r else '-' }}</span>
+                    </td>
+                    <td>
+                        {% if r %}
+                            <strong class="fs-5 text-{% if r.risk_level == 'HIGH' %}danger{% elif r.risk_level == 'MEDIUM' %}warning{% else %}success{% endif %}">
+                                {{ r.risk_score }}
+                            </strong>
+                            <small class="text-muted">/100</small>
+                        {% else %}
+                            <span class="text-muted">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if r %}
+                            {% if r.risk_level == 'HIGH' %}
+                                <span class="badge badge-high">HIGH</span>
+                            {% elif r.risk_level == 'MEDIUM' %}
+                                <span class="badge badge-med">MEDIUM</span>
+                            {% else %}
+                                <span class="badge badge-low">LOW</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="badge bg-secondary">Unanalyzed</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('main.user_profile', user_id=u.user_id) }}" class="btn btn-outline-primary btn-sm px-3">
+                            Profile & WHY →
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="10" class="text-center text-muted py-4">No identities match the current search or filter criteria.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

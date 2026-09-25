@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1 text-light">Audit & Security Assessment Reports</h2>
+        <p class="text-muted mb-0">Export formal, publication-grade executive and forensic security dossiers compiled with ReportLab.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Card 1: Full Security Assessment Report (Section 29) -->
+    <div class="col-lg-6 col-md-12">
+        <div class="cyber-card p-4 h-100 d-flex flex-column justify-content-between border-info">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="fs-2 text-info">📑</span>
+                    <h4 class="text-light m-0">Full Security Assessment Report</h4>
+                </div>
+                <p class="text-muted">
+                    Generates a comprehensive executive report containing monitored identity distributions, high-risk entity rankings, topological graph metrics breakdown, and SOC remediation recommendations.
+                </p>
+                <ul class="text-light small ps-3 mb-4">
+                    <li>Executive Risk Summary & Population Metrics</li>
+                    <li>Ranked High-Risk Identity Registry (Top Threats)</li>
+                    <li>Explainable root-cause findings (WHY)</li>
+                    <li>Forensic mitigation guidance (WHAT NEXT)</li>
+                </ul>
+            </div>
+            <a href="{{ url_for('main.download_full_pdf_report') }}" class="btn btn-primary btn-lg w-100 shadow">
+                📄 Generate Full Security Report (PDF)
+            </a>
+        </div>
+    </div>
+
+    <!-- Card 2: Targeted User Risk Report (Section 28) -->
+    <div class="col-lg-6 col-md-12">
+        <div class="cyber-card p-4 h-100 d-flex flex-column justify-content-between border-danger">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="fs-2 text-danger">👤</span>
+                    <h4 class="text-light m-0">Targeted User Risk Assessment Dossier</h4>
+                </div>
+                <p class="text-muted">
+                    Compile an isolated forensic risk dossier for a specific enterprise employee or administrator account, including complete behavioral telemetry and graph centrality metrics.
+                </p>
+                <form id="userReportForm" class="mb-3">
+                    <label class="form-label text-light small fw-bold">Select Identity to Export:</label>
+                    <select id="selectedUserReport" class="form-select form-control-cyber" required>
+                        {% for u in users_list %}
+                        <option value="{{ u.user_id }}">{{ u.user_id }} — {{ u.name or 'Staff' }} ({{ u.department or 'N/A' }})</option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
+            <button type="button" onclick="downloadSelectedUserReport()" class="btn btn-danger btn-lg w-100 shadow">
+                📄 Generate User Risk Report (PDF)
+            </button>
+        </div>
+    </div>
+
+    <!-- Card 3: Security Incident & Alerts Log -->
+    <div class="col-lg-6 col-md-12">
+        <div class="cyber-card p-4 h-100 d-flex flex-column justify-content-between border-warning">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="fs-2 text-warning">🚨</span>
+                    <h4 class="text-light m-0">Security Incidents & Alerts Audit Report</h4>
+                </div>
+                <p class="text-muted">
+                    Formal SOC audit document enumerating all active and historical security findings, severity classifications, and investigative status timestamps.
+                </p>
+                <div class="d-flex gap-2 my-3">
+                    <span class="badge bg-danger">Critical Alerts</span>
+                    <span class="badge bg-warning text-white">High Severity</span>
+                    <span class="badge bg-success">Triage Evidence</span>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('main.download_alerts_pdf_report') }}" class="btn btn-warning w-100 shadow text-white fw-bold">
+                    📄 Export Alerts PDF
+                </a>
+                <a href="{{ url_for('main.export_alerts_csv') }}" class="btn btn-outline-secondary w-50">
+                    📥 Export CSV
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 4: Research Evaluation & Ablation Study Report -->
+    <div class="col-lg-6 col-md-12">
+        <div class="cyber-card p-4 h-100 d-flex flex-column justify-content-between border-secondary">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="fs-2 text-light">🧪</span>
+                    <h4 class="text-light m-0">Model Evaluation & Ablation Report</h4>
+                </div>
+                <p class="text-muted">
+                    Academic research report benchmarking the 4 analytical model configurations (Rules, Graph, ML, Hybrid) against CMU SEI CERT r4.2 ground-truth insider threat labels.
+                </p>
+                <div class="d-flex gap-2 my-3">
+                    <span class="badge bg-dark border border-secondary text-info">Precision & Recall</span>
+                    <span class="badge bg-dark border border-secondary text-warning">F1-Score & AUC</span>
+                    <span class="badge bg-dark border border-secondary text-success">Confusion Matrix</span>
+                </div>
+            </div>
+            <a href="{{ url_for('main.download_evaluation_pdf_report') }}" class="btn btn-outline-info btn-lg w-100 shadow">
+                📄 Export Research Evaluation Report (PDF)
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    function downloadSelectedUserReport() {
+        const uid = document.getElementById('selectedUserReport').value;
+        if (uid) {
+            window.location.href = `/reports/pdf/user/${uid}`;
+        }
+    }
+</script>
+{% endblock %}

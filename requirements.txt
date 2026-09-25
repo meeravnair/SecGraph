@@ -1,0 +1,13 @@
+Flask
+Flask-SQLAlchemy
+Flask-Login
+Werkzeug
+networkx
+pandas
+numpy
+scikit-learn
+plotly
+pyvis
+reportlab
+joblib
+python-dotenv

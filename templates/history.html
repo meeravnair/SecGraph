@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1 text-light">Analytical Execution History</h2>
+        <p class="text-muted mb-0">Audit trail of automated and analyst-triggered SecGraph pipeline execution runs.</p>
+    </div>
+    <div>
+        <form action="{{ url_for('main.run_pipeline') }}" method="POST">
+            <button type="submit" class="btn btn-primary btn-sm">
+                ⚡ Run New Analysis Run
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="cyber-card p-0">
+    <div class="table-responsive">
+        <table class="cyber-table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Run ID</th>
+                    <th>Execution Timestamp</th>
+                    <th>Dataset Name</th>
+                    <th>Events Processed</th>
+                    <th>Users Analyzed</th>
+                    <th>High Risk</th>
+                    <th>Anomalies</th>
+                    <th>Alerts Triggered</th>
+                    <th>Latency</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in history_records %}
+                <tr>
+                    <td><code>#{{ h.id }}</code></td>
+                    <td><span class="text-light">{{ h.timestamp.strftime('%Y-%m-%d %H:%M:%S') }} UTC</span></td>
+                    <td><span class="badge bg-dark border border-secondary text-info">{{ h.dataset_name }}</span></td>
+                    <td>{{ h.total_records }}</td>
+                    <td><strong>{{ h.users_analyzed }}</strong></td>
+                    <td>
+                        <span class="badge bg-danger">{{ h.high_risk_count }}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-warning text-white">{{ h.anomalies_detected }}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-primary">{{ h.alerts_generated }}</span>
+                    </td>
+                    <td><code>{{ h.execution_time_sec }}s</code></td>
+                    <td>
+                        <span class="badge bg-success">{{ h.status }}</span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="10" class="text-center text-muted py-5">
+                        No historical analysis runs logged yet. Execute the analytical pipeline to establish baseline history.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

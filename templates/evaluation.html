@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1 text-light">MSc Research Model Evaluation & Ablation Benchmarks</h2>
+        <p class="text-muted mb-0">Empirical validation and comparative ablation study evaluated against CMU SEI CERT r4.2 ground truth.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('main.download_evaluation_pdf_report') }}" class="btn btn-outline-info btn-sm">
+            📄 Export Evaluation PDF
+        </a>
+    </div>
+</div>
+
+{% if not eval_results.has_data %}
+<div class="alert alert-warning bg-dark text-warning border-warning p-4 text-center">
+    <h4>No Evaluation Results Available</h4>
+    <p class="mb-3">The analytical pipeline has not been executed on the ingested telemetry yet.</p>
+    <a href="{{ url_for('main.analysis_page') }}" class="btn btn-warning">⚡ Execute Analysis Pipeline Now</a>
+</div>
+{% else %}
+
+<!-- Ground Truth & Dataset Status Banner (Section 30 Requirements) -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-sm-6">
+        <div class="cyber-card kpi-card">
+            <div class="kpi-title">GROUND TRUTH</div>
+            <div class="kpi-value text-success">✓ Available</div>
+            <div class="kpi-subtext">CERT insiders.csv loaded</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="cyber-card kpi-card">
+            <div class="kpi-title">TRUE THREATS</div>
+            <div class="kpi-value text-danger">{{ eval_results.ground_truth_count }} Users</div>
+            <div class="kpi-subtext">Known simulated malicious targets</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="cyber-card kpi-card">
+            <div class="kpi-title">TOTAL EVALUATED</div>
+            <div class="kpi-value text-info">{{ eval_results.total_evaluated }} Users</div>
+            <div class="kpi-subtext">Evaluated in test population</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="cyber-card kpi-card">
+            <div class="kpi-title">HYBRID RECALL</div>
+            <div class="kpi-value text-success">{{ (eval_results.overall_metrics.recall * 100)|round(1) }}%</div>
+            <div class="kpi-subtext">Model D Threat Capture Rate</div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 31 & 32: Comparative Experiments Table -->
+<div class="cyber-card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h5 class="fw-bold text-light m-0">Ablation Study: 4 Analytical Configurations</h5>
+            <p class="text-muted small mb-0">Empirical validation of Research Question 3 (RQ3): Evaluating single-technique baselines against SecGraph.</p>
+        </div>
+        <span class="badge bg-dark border border-secondary text-info">CMU CERT Benchmark</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="cyber-table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Analytical Architecture</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>F1-Score</th>
+                    <th>Accuracy</th>
+                    <th>ROC-AUC</th>
+                    <th>Interpretability</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in eval_results.comparative_table %}
+                <tr class="{% if 'Hybrid' in row.name %}border-start border-4 border-info bg-dark{% endif %}">
+                    <td>
+                        <strong class="{% if 'Hybrid' in row.name %}text-info fs-6{% else %}text-light{% endif %}">
+                            {{ row.name }}
+                        </strong>
+                        <small class="text-muted d-block">{{ row.description }}</small>
+                    </td>
+                    <td><strong class="text-light">{{ row.precision }}</strong></td>
+                    <td><strong class="text-success">{{ row.recall }}</strong></td>
+                    <td><strong class="text-warning">{{ row.f1 }}</strong></td>
+                    <td><span class="text-light">{{ row.accuracy }}</span></td>
+                    <td><strong class="text-info">{{ row.roc_auc }}</strong></td>
+                    <td>
+                        {% if 'Hybrid' in row.name %}
+                            <span class="badge bg-success">Very High (Full XAI)</span>
+                        {% elif 'ML' in row.name %}
+                            <span class="badge bg-secondary">Medium (Outlier scores)</span>
+                        {% elif 'Graph' in row.name %}
+                            <span class="badge bg-secondary">Medium (Path lengths)</span>
+                        {% else %}
+                            <span class="badge bg-dark border border-secondary text-muted">Rule lists</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Section 33 & 34: Confusion Matrix & Key Performance Metrics -->
+<div class="row g-3 mb-4">
+    <!-- Confusion Matrix Grid (Section 33) -->
+    <div class="col-lg-6">
+        <div class="cyber-card p-4 h-100">
+            <h5 class="fw-bold text-light mb-3">Confusion Matrix: Model D (SecGraph Hybrid)</h5>
+            <p class="text-muted small">Actual Ground Truth Threat Status vs. Hybrid Analytical Decision Classification.</p>
+            
+            <div class="table-responsive mt-3">
+                <table class="table table-bordered text-center align-middle border-secondary text-light">
+                    <thead>
+                        <tr class="bg-dark text-muted small">
+                            <th style="width: 30%;">Actual / Predicted</th>
+                            <th style="width: 35%;" class="text-info">Predicted Normal (Low/Med)</th>
+                            <th style="width: 35%;" class="text-danger">Predicted Threat (High)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="fw-bold text-muted bg-dark text-start">Actual Normal</td>
+                            <td class="p-3 bg-dark">
+                                <div class="fs-4 fw-bold text-success">{{ eval_results.confusion_matrix.tn }}</div>
+                                <small class="text-muted">True Negative (TN)</small>
+                            </td>
+                            <td class="p-3 bg-dark">
+                                <div class="fs-4 fw-bold text-warning">{{ eval_results.confusion_matrix.fp }}</div>
+                                <small class="text-muted">False Positive (FP)</small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-muted bg-dark text-start">Actual Threat (Insiders)</td>
+                            <td class="p-3 bg-dark">
+                                <div class="fs-4 fw-bold text-danger">{{ eval_results.confusion_matrix.fn }}</div>
+                                <small class="text-muted">False Negative (FN)</small>
+                            </td>
+                            <td class="p-3 bg-dark">
+                                <div class="fs-4 fw-bold text-success">{{ eval_results.confusion_matrix.tp }}</div>
+                                <small class="text-muted">True Positive (TP)</small>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="text-muted small mt-2 text-center">
+                Ground-truth targets successfully flagged in HIGH risk tier: 
+                {% for mid in eval_results.malicious_users_identified %}
+                <code class="text-info fw-bold">{{ mid }}</code>{% if not loop.last %}, {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics Cards (Section 34) -->
+    <div class="col-lg-6">
+        <div class="cyber-card p-4 h-100">
+            <h5 class="fw-bold text-light mb-3">Model Performance Summary (Model D)</h5>
+            <div class="row g-3">
+                <div class="col-6">
+                    <div class="p-3 bg-dark rounded border border-success text-center">
+                        <span class="text-muted small">ACCURACY</span>
+                        <div class="fs-3 fw-bold text-success">{{ (eval_results.overall_metrics.accuracy * 100)|round(2) }}%</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-3 bg-dark rounded border border-info text-center">
+                        <span class="text-muted small">PRECISION</span>
+                        <div class="fs-3 fw-bold text-info">{{ (eval_results.overall_metrics.precision * 100)|round(2) }}%</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-3 bg-dark rounded border border-warning text-center">
+                        <span class="text-muted small">RECALL (DETECTION RATE)</span>
+                        <div class="fs-3 fw-bold text-warning">{{ (eval_results.overall_metrics.recall * 100)|round(2) }}%</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-3 bg-dark rounded border border-danger text-center">
+                        <span class="text-muted small">F1-SCORE</span>
+                        <div class="fs-3 fw-bold text-danger">{{ eval_results.overall_metrics.f1 }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-dark border-secondary mt-3 mb-0 small text-muted">
+                <strong class="text-light">Research Conclusion (RQ3):</strong> Fusing graph centrality, Isolation Forest unsupervised behavioral modeling, and domain security rules achieves optimal threat prioritization while eliminating single-technique blind spots.
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

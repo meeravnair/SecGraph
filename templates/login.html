@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block login_body %}
+<div class="login-container">
+    <!-- Left Section: Branding, Tagline & Cyber Art -->
+    <div class="login-left">
+        <div class="login-brand">
+            <h1>🛡️ SecGraph</h1>
+            <p>Explainable Hybrid Graph and Behavioral Analytics for Enterprise Identity Risk Assessment</p>
+        </div>
+
+        <div class="graph-illustration">
+            <svg width="280" height="200" viewBox="0 0 280 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Outer Ring Connections -->
+                <line x1="140" y1="40" x2="60" y2="100" stroke="#881337" stroke-width="2" stroke-dasharray="4 4"/>
+                <line x1="140" y1="40" x2="220" y2="100" stroke="#881337" stroke-width="2"/>
+                <line x1="60" y1="100" x2="90" y2="160" stroke="#38bdf8" stroke-width="2"/>
+                <line x1="220" y1="100" x2="190" y2="160" stroke="#881337" stroke-width="2"/>
+                <line x1="90" y1="160" x2="190" y2="160" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4 4"/>
+                <line x1="140" y1="40" x2="140" y2="110" stroke="#ef4444" stroke-width="3"/>
+                <line x1="60" y1="100" x2="140" y2="110" stroke="#ef4444" stroke-width="2"/>
+                <line x1="220" y1="100" x2="140" y2="110" stroke="#ef4444" stroke-width="2"/>
+                
+                <!-- Nodes -->
+                <circle cx="140" cy="40" r="14" fill="#11192e" stroke="#38bdf8" stroke-width="3"/>
+                <circle cx="60" cy="100" r="12" fill="#11192e" stroke="#a855f7" stroke-width="3"/>
+                <circle cx="220" cy="100" r="12" fill="#11192e" stroke="#f59e0b" stroke-width="3"/>
+                <circle cx="90" cy="160" r="12" fill="#11192e" stroke="#10b981" stroke-width="3"/>
+                <circle cx="190" cy="160" r="12" fill="#11192e" stroke="#38bdf8" stroke-width="3"/>
+                
+                <!-- Central Anomaly Node -->
+                <circle cx="140" cy="110" r="16" fill="#450a0a" stroke="#ef4444" stroke-width="4"/>
+                <circle cx="140" cy="110" r="6" fill="#ef4444"/>
+            </svg>
+        </div>
+
+        <div class="login-tagline">
+            ANALYZE • CONNECT • DETECT • PROTECT
+        </div>
+    </div>
+
+    <!-- Right Section: Login Form Card -->
+    <div class="login-right">
+        <div class="login-card">
+            <h3>Login</h3>
+            <p class="subtitle">Enter analyst credentials to access platform telemetry</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, msg in messages %}
+                        <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show cyber-alert py-2 mb-3" role="alert">
+                            <span class="small">{{ msg }}</span>
+                            <button type="button" class="btn-close btn-close-white small p-2" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('main.login', next=request.args.get('next')) }}">
+                <!-- Quick Credentials Helper Box -->
+               
+
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">USERNAME</label>
+                    <input type="text" id="username" name="username" class="form-control form-control-cyber" required value="meera" placeholder="meera" autocomplete="username">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">PASSWORD</label>
+                    <input type="password" id="password" name="password" class="form-control form-control-cyber" required value="meera123" placeholder="meera123" autocomplete="current-password">
+                </div>
+
+                <div class="mb-4 d-flex justify-content-between align-items-center">
+                    <div class="form-check">
+                        <input class="form-check-input bg-dark border-secondary" type="checkbox" id="remember" name="remember" checked>
+                        <label class="form-check-label text-muted small" for="remember">Remember me</label>
+                    </div>
+                </div>
+
+                <button type="submit" id="loginBtn" class="btn btn-cyber-primary w-100 mb-2">LOGIN</button>
+
+                <div class="login-footer-warning text-center">
+                    Authorized security personnel only.
+                </div>
+            </form>
+
+            <script>
+                function setCreds(u, p) {
+                    document.getElementById('username').value = u;
+                    document.getElementById('password').value = p;
+                }
+            </script>
+        </div>
+    </div>
+</div>
+{% endblock %}

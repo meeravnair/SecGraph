@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1 text-light">Data Processing & Analytical Pipeline</h2>
+        <p class="text-muted mb-0">End-to-End Orchestration: Ingestion $\to$ Feature Extraction $\to$ NetworkX Graph $\to$ Isolation Forest $\to$ Rules $\to$ Hybrid Risk</p>
+    </div>
+    <div>
+        <form action="{{ url_for('main.run_pipeline') }}" method="POST" id="runPipelineForm">
+            <button type="submit" class="btn btn-danger btn-lg px-4 shadow">
+                ⚡ RUN SECURITY ANALYSIS
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Pipeline Progress / Status Interface (Section 19 & 20 Requirements) -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-7 col-md-12">
+        <div class="cyber-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-light m-0">⚙️ Analytical Pipeline Execution Checklist</h5>
+                <span class="badge bg-success">Status: Ready / Complete</span>
+            </div>
+
+            <div class="list-group list-group-flush bg-transparent">
+                <div class="list-group-item bg-transparent text-light border-secondary px-0 py-2 d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-success fw-bold me-2">✓</span>
+                        <strong>1. Dataset Ingestion</strong>
+                        <small class="text-muted d-block ps-4">Chunked parsing of logon.csv, file.csv, device.csv, http.csv (chunksize=100,000).</small>
+                    </div>
+                    <span class="badge bg-dark border border-secondary text-info">Streaming Chunked</span>
+                </div>
+
+                <div class="list-group-item bg-transparent text-light border-secondary px-0 py-2 d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-success fw-bold me-2">✓</span>
+                        <strong>2. Data Validation & Hygiene</strong>
+                        <small class="text-muted d-block ps-4">Verify required columns, sanitize strings, remove duplicate rows, enforce data types.</small>
+                    </div>
+                    <span class="badge bg-dark border border-secondary text-success">Cleaned</span>
+                </div>
+
+                <div class="list-group-item bg-transparent text-light border-secondary px-0 py-2 d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-success fw-bold me-2">✓</span>
+                        <strong>3. Timestamp Normalization</strong>
+                        <small class="text-muted d-block ps-4">Standardize disparate datetime formats into UTC datetime timestamps.</small>
+                    </div>
+                    <span class="badge bg-dark border border-secondary text-light">UTC Aligned</span>
+                </div>
+
+                <div class="list-group-item bg-transparent text-light border-secondary px-0 py-2 d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-success fw-bold me-2">✓</span>
+                        <strong>4. Behavioral Feature Engineering</strong>
+                        <small class="text-muted d-block ps-4">Synthesize 8-dimensional user vectors (logins, devices, resources, after-hours, weekends).</small>
+                    </div>
+                    <span class="badge bg-dark border border-secondary text-warning">8 Features/User</span>
+                </div>
+
+                <div class="list-group-item bg-transparent text-light border-secondary px-0 py-2 d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-success fw-bold me-2">✓</span>
+                        <strong>5. Identity-Access Graph Modeling</strong>
+                        <small class="text-muted d-block ps-4">Construct NetworkX heterogeneous graph connecting Users, Roles, Devices, and Resources.</small>
+                    </div>
+                    <span class="badge bg-dark border border-secondary text-info">NetworkX Graph</span>
+                </div>
+
+                <div class="list-group-item bg-transparent text-light border-secondary px-0 py-2 d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-success fw-bold me-2">✓</span>
+                        <strong>6. Graph Centrality Computation</strong>
+                        <small class="text-muted d-block ps-4">Compute Degree Centrality, Betweenness Centrality, and Shortest Paths to sensitive nodes.</small>
+                    </div>
+                    <span class="badge bg-dark border border-secondary text-light">Topological Metrics</span>
+                </div>
+
+                <div class="list-group-item bg-transparent text-light border-secondary px-0 py-2 d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-success fw-bold me-2">✓</span>
+                        <strong>7. Unsupervised Isolation Forest ML</strong>
+                        <small class="text-muted d-block ps-4">Fit Isolation Forest on scaled behavioral matrix; produce continuous anomaly scores.</small>
+                    </div>
+                    <span class="badge bg-dark border border-secondary text-warning">Scikit-learn</span>
+                </div>
+
+                <div class="list-group-item bg-transparent text-light border-secondary px-0 py-2 d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-success fw-bold me-2">✓</span>
+                        <strong>8. Deterministic Domain Rule Evaluation</strong>
+                        <small class="text-muted d-block ps-4">Evaluate 5 cybersecurity heuristics (sensitive access, multi-device, after-hours spike).</small>
+                    </div>
+                    <span class="badge bg-dark border border-secondary text-danger">5 Policy Rules</span>
+                </div>
+
+                <div class="list-group-item bg-transparent text-light border-secondary px-0 py-2 d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-success fw-bold me-2">✓</span>
+                        <strong>9. Hybrid Risk Score Synthesis</strong>
+                        <small class="text-muted d-block ps-4">Calibrated weighted fusion: $Risk = 0.35 \cdot G + 0.35 \cdot B + 0.30 \cdot R$.</small>
+                    </div>
+                    <span class="badge bg-dark border border-secondary text-danger">0 - 100 Score</span>
+                </div>
+
+                <div class="list-group-item bg-transparent text-light border-secondary px-0 py-2 d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-success fw-bold me-2">✓</span>
+                        <strong>10. Explainability & Alert Dispatch</strong>
+                        <small class="text-muted d-block ps-4">Synthesize natural-language justifications (WHY) and queue high-risk SOC alerts.</small>
+                    </div>
+                    <span class="badge bg-dark border border-secondary text-success">XAI Generated</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Last Execution & Rules Summary (Section 21 & 22) -->
+    <div class="col-lg-5 col-md-12">
+        <!-- Last Run Statistics -->
+        <div class="cyber-card p-4 mb-4">
+            <h5 class="fw-bold text-info mb-3">⏱️ Last Pipeline Execution Summary</h5>
+            {% if last_history %}
+            <div class="row g-2 mb-3 text-center">
+                <div class="col-4">
+                    <div class="p-2 bg-dark rounded border border-secondary">
+                        <span class="text-muted small">Latency</span>
+                        <div class="fs-5 fw-bold text-success">{{ last_history.execution_time_sec }}s</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="p-2 bg-dark rounded border border-secondary">
+                        <span class="text-muted small">Events</span>
+                        <div class="fs-5 fw-bold text-info">{{ last_history.total_records }}</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="p-2 bg-dark rounded border border-secondary">
+                        <span class="text-muted small">Users</span>
+                        <div class="fs-5 fw-bold text-light">{{ last_history.users_analyzed }}</div>
+                    </div>
+                </div>
+            </div>
+            <p class="text-muted small mb-0">
+                Executed at: <strong class="text-light">{{ last_history.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') }}</strong><br>
+                High-Risk Identities: <span class="badge bg-danger">{{ last_history.high_risk_count }}</span> | 
+                Anomalies: <span class="badge bg-warning text-white">{{ last_history.anomalies_detected }}</span> | 
+                Alerts: <span class="badge bg-primary">{{ last_history.alerts_generated }}</span>
+            </p>
+            {% else %}
+            <div class="alert alert-info bg-dark text-info border-info mb-0">
+                Pipeline has not yet been executed in this session. Click <strong>RUN SECURITY ANALYSIS</strong> above.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Section 21: Security Rules Summary -->
+        <div class="cyber-card p-4">
+            <h5 class="fw-bold text-warning mb-3">🛡️ Security Rules Evaluated</h5>
+            <div class="list-group list-group-flush bg-transparent">
+                {% for rule in rules_summary %}
+                <div class="list-group-item bg-transparent text-light border-secondary px-0 py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <strong class="text-light">{{ rule.title }}</strong>
+                        <span class="badge bg-dark border border-danger text-danger">{{ rule.weight }}</span>
+                    </div>
+                    <small class="text-muted d-block">{{ rule.desc }} (Threshold: {{ rule.threshold }})</small>
+                    <div class="mt-1 d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">Identities Triggered:</span>
+                        <span class="badge bg-{% if rule.count > 0 %}danger{% else %}secondary{% endif %}">{{ rule.count }} users</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
