@@ -199,6 +199,29 @@ Explainability
       ↓
 Dashboard / Alerts / Reports
 
+## IMAGES
+## LOG IN PAGE
+<img width="926" height="406" alt="Screenshot 2026-09-25 115614" src="https://github.com/user-attachments/assets/e730870d-1699-4eeb-b624-eb65b50cd400" />
+
+##Dashboard showing Risk and Details
+<img width="925" height="431" alt="Screenshot 2026-09-25 115627" src="https://github.com/user-attachments/assets/6bfa7214-2957-453f-aeb5-d15ef9d032ec" />
+##
+## Identity Monitoring Page
+<img width="926" height="426" alt="Screenshot 2026-09-25 115638" src="https://github.com/user-attachments/assets/edb411cf-5ce1-4ee6-b038-33cf3eda9550" />
+
+## Graph Analysis
+<img width="925" height="416" alt="Screenshot 2026-09-25 115653" src="https://github.com/user-attachments/assets/e5e843f7-9303-4a75-b0aa-0e348dffde83" />
+
+## Alert Page
+<img width="924" height="356" alt="Screenshot 2026-09-25 115703" src="https://github.com/user-attachments/assets/7e401193-d788-4dcc-b8fe-51bb853f0412" />
+
+## Audit and Security Assessment Page
+<img width="926" height="371" alt="Screenshot 2026-09-25 115711" src="https://github.com/user-attachments/assets/b899bce6-6ce8-4989-8993-cf1249837c47" />
+
+## Data Upload 
+<img width="926" height="421" alt="Screenshot 2026-09-25 115722" src="https://github.com/user-attachments/assets/d7b70835-8a57-4e0d-af99-669b098dd06c" />
+
+
 
 ## Risk Scoring
 
